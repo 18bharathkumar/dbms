@@ -87,6 +87,15 @@ function AppRoutes() {
       />
 
       <Route
+        path="/coordinator/jobs"
+        element={
+          <PrivateRoute role="coordinator">
+            <CoordinatorDashboard />
+          </PrivateRoute>
+        }
+      />
+
+      <Route
         path="/statistics"
         element={
           <PrivateRoute>

@@ -60,7 +60,7 @@ interface CompanyStats {
     }[];
 }
 
-type View = 'dashboard' | 'department' | 'company' | 'all-students' | 'all-applications' | 'all-companies';
+type View = 'dashboard' | 'department' | 'company' | 'all-students' | 'all-applications' | 'all-companies' | 'all-jobs';
 
 export const CoordinatorDashboard: React.FC = () => {
     const location = useLocation();
@@ -72,6 +72,8 @@ export const CoordinatorDashboard: React.FC = () => {
     const [selectedCompany, setSelectedCompany] = useState<CompanyStats | null>(null);
     const [allStudents, setAllStudents] = useState<Student[]>([]);
     const [allApplications, setAllApplications] = useState<any[]>([]);
+    const [allJobs, setAllJobs] = useState<any[]>([]);
+    const [jobSearchTerm, setJobSearchTerm] = useState('');
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [companySearchTerm, setCompanySearchTerm] = useState('');
@@ -81,6 +83,8 @@ export const CoordinatorDashboard: React.FC = () => {
     useEffect(() => {
         if (location.pathname === '/coordinator/companies') {
             setView('all-companies');
+        } else if (location.pathname === '/coordinator/jobs') {
+            handleViewAllJobs();
         } else if (location.pathname === '/coordinator') {
             setView('dashboard');
         }
@@ -209,6 +213,19 @@ export const CoordinatorDashboard: React.FC = () => {
             setView('all-applications');
         } catch (err) {
             console.error('Failed to fetch all applications', err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleViewAllJobs = async () => {
+        setLoading(true);
+        try {
+            const res = await api.get('/companies/job-roles');
+            setAllJobs(res.data);
+            setView('all-jobs');
+        } catch (err) {
+            console.error('Failed to fetch all jobs', err);
         } finally {
             setLoading(false);
         }
@@ -376,6 +393,7 @@ export const CoordinatorDashboard: React.FC = () => {
                         {view === 'company' && `${selectedCompany?.name} Statistics`}
                         {view === 'all-students' && 'All Registered Students'}
                         {view === 'all-companies' && 'Manage Companies'}
+                        {view === 'all-jobs' && 'Manage Job Roles'}
                     </h1>
                     <p className="text-slate-500 mt-1">
                         {view === 'dashboard' && 'Manage placements, companies, and student applications.'}
@@ -383,6 +401,7 @@ export const CoordinatorDashboard: React.FC = () => {
                         {view === 'company' && 'Detailed hiring history and visit statistics.'}
                         {view === 'all-students' && 'Complete list of all students across departments.'}
                         {view === 'all-companies' && 'View and manage all registered companies and visits.'}
+                        {view === 'all-jobs' && 'View and manage all job roles.'}
                     </p>
                 </div>
                 {view === 'dashboard' && (
@@ -748,6 +767,64 @@ export const CoordinatorDashboard: React.FC = () => {
                     </motion.div>
                 )}
 
+                {view === 'all-jobs' && (
+                    <motion.div
+                        key="all-jobs"
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                        className="space-y-6"
+                    >
+                        <div className="flex gap-4 mb-4">
+                            <div className="relative flex-1 max-w-md">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                                <input
+                                    type="text"
+                                    placeholder="Search job roles..."
+                                    className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
+                                    value={jobSearchTerm}
+                                    onChange={(e) => setJobSearchTerm(e.target.value)}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {allJobs
+                                .filter(job => job.title.toLowerCase().includes(jobSearchTerm.toLowerCase()) || job.company?.name.toLowerCase().includes(jobSearchTerm.toLowerCase()))
+                                .map((job) => (
+                                    <Card key={job.id} className="p-6 hover:border-indigo-200 transition-all">
+                                        <div className="flex justify-between items-start mb-4">
+                                            <div>
+                                                <h3 className="text-lg font-bold text-slate-900">{job.title}</h3>
+                                                <p className="text-sm text-slate-500">{job.company?.name}</p>
+                                            </div>
+                                            <Badge variant={job.slab === 'Dream' ? 'warning' : 'info'}>{job.slab}</Badge>
+                                        </div>
+
+                                        <div className="space-y-3 mb-6">
+                                            <div className="flex justify-between text-sm">
+                                                <span className="text-slate-500">Package</span>
+                                                <span className="font-semibold text-slate-900">₹{job.package.toLocaleString()}</span>
+                                            </div>
+                                            <div className="flex justify-between text-sm">
+                                                <span className="text-slate-500">CGPA Cutoff</span>
+                                                <span className="font-semibold text-slate-900">{job.cgpaCutoff}</span>
+                                            </div>
+                                            <div className="flex justify-between text-sm">
+                                                <span className="text-slate-500">Deadline</span>
+                                                <span className="font-semibold text-slate-900">{new Date(job.applicationDeadline).toLocaleDateString()}</span>
+                                            </div>
+                                        </div>
+
+                                        <Button className="w-full" onClick={() => handleManageRole(job)}>
+                                            Manage Applications
+                                        </Button>
+                                    </Card>
+                                ))}
+                        </div>
+                    </motion.div>
+                )}
+
                 {view === 'company' && selectedCompany && (
                     <motion.div
                         key="company"
@@ -1057,7 +1134,7 @@ export const CoordinatorDashboard: React.FC = () => {
                             <div className="flex justify-between items-start mb-6">
                                 <div>
                                     <h2 className="text-xl font-bold text-slate-900">Manage Applications</h2>
-                                    <p className="text-slate-500">{selectedJobRole.title} - {selectedCompany?.name}</p>
+                                    <p className="text-slate-500">{selectedJobRole.title} - {selectedCompany?.name || selectedJobRole.company?.name}</p>
                                 </div>
                                 <button onClick={() => setShowManageRoleModal(false)} className="text-slate-400 hover:text-slate-600">
                                     <X size={20} />
