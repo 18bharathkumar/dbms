@@ -393,7 +393,7 @@ export const CoordinatorDashboard: React.FC = () => {
                         {view === 'company' && `${selectedCompany?.name} Statistics`}
                         {view === 'all-students' && 'All Registered Students'}
                         {view === 'all-companies' && 'Manage Companies'}
-                        {view === 'all-jobs' && 'Manage Job Roles'}
+                        {view === 'all-jobs' && 'Manage Applications'}
                     </h1>
                     <p className="text-slate-500 mt-1">
                         {view === 'dashboard' && 'Manage placements, companies, and student applications.'}
@@ -401,7 +401,7 @@ export const CoordinatorDashboard: React.FC = () => {
                         {view === 'company' && 'Detailed hiring history and visit statistics.'}
                         {view === 'all-students' && 'Complete list of all students across departments.'}
                         {view === 'all-companies' && 'View and manage all registered companies and visits.'}
-                        {view === 'all-jobs' && 'View and manage all job roles.'}
+                        {view === 'all-jobs' && 'View and manage all job applications.'}
                     </p>
                 </div>
                 {view === 'dashboard' && (
@@ -814,10 +814,19 @@ export const CoordinatorDashboard: React.FC = () => {
                                                 <span className="text-slate-500">Deadline</span>
                                                 <span className="font-semibold text-slate-900">{new Date(job.applicationDeadline).toLocaleDateString()}</span>
                                             </div>
+                                            <div className="flex justify-between text-sm items-center pt-2 border-t border-slate-100 mt-2">
+                                                <span className="text-slate-500">Status</span>
+                                                <Badge variant={
+                                                    job.currentStage === 'APPLICATION_OPEN' ? 'success' :
+                                                        job.currentStage === 'FINAL_RESULT_ANNOUNCED' ? 'info' : 'warning'
+                                                }>
+                                                    {job.currentStage?.replace(/_/g, ' ') || 'OPEN'}
+                                                </Badge>
+                                            </div>
                                         </div>
 
                                         <Button className="w-full" onClick={() => handleManageRole(job)}>
-                                            Manage Applications
+                                            Manage Applications of {job.company?.name}
                                         </Button>
                                     </Card>
                                 ))}

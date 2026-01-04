@@ -33,7 +33,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
     ] : [
         { label: 'Dashboard', icon: LayoutDashboard, path: '/coordinator' },
         { label: 'Companies', icon: Briefcase, path: '/coordinator/companies' },
-        { label: 'Job Roles', icon: FileText, path: '/coordinator/jobs' },
+        { label: 'Applications', icon: FileText, path: '/coordinator/jobs' },
         { label: 'Students', icon: User, path: '/coordinator/students' },
         { label: 'Statistics', icon: TrendingUp, path: '/statistics' },
         { label: 'Settings', icon: Settings, path: '/coordinator/settings' },
