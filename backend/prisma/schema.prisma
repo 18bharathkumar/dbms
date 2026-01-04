@@ -1,0 +1,182 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Slab {
+  Dream
+  OpenDream
+}
+
+enum PlacementStatus {
+  unplaced
+  Dream
+  OpenDream
+}
+
+enum ApplicationStatus {
+  APPLIED
+  SELECTED_FOR_OA
+  SELECTED_FOR_INTERVIEW
+  OFFERED
+  REJECTED
+}
+
+model AcademicYear {
+  id            Int            @id @default(autoincrement())
+  year          Int            @unique
+  companyVisits CompanyVisit[]
+}
+
+model Company {
+  id            Int            @id @default(autoincrement())
+  name          String
+
+  companyVisits CompanyVisit[]
+
+  preferredInRules AutoApplyPreferredCompany[]
+  jobRoles         JobRole[]
+}
+
+model CompanyVisit {
+  id             Int           @id @default(autoincrement())
+  visitDate      DateTime       @default(now())
+
+  companyId      Int
+  academicYearId Int
+
+  company        Company       @relation(fields: [companyId], references: [id])
+  academicYear   AcademicYear  @relation(fields: [academicYearId], references: [id])
+
+  jobRoles       JobRole[]
+}
+
+
+enum RecruitmentStage {
+  APPLICATION_OPEN
+  OA_SHORTLIST_DONE
+  INTERVIEW_SHORTLIST_DONE
+  FINAL_RESULT_ANNOUNCED
+}
+
+model JobRole {
+  id                  Int               @id @default(autoincrement())
+  title               String
+  package             Float
+  packageDetails      String
+  cgpaCutoff          Float
+  slab                Slab
+  applicationDeadline DateTime          
+  currentStage        RecruitmentStage  @default(APPLICATION_OPEN)
+  oaDate              DateTime?
+  interviewDate       DateTime?
+
+  companyId       Int
+  company         Company       @relation(fields: [companyId], references: [id])
+
+  companyVisitId  Int
+  companyVisit    CompanyVisit  @relation(fields: [companyVisitId], references: [id])
+
+  applications    Application[]
+  placedStudents  Student[]     @relation("PlacedStudent")
+}
+
+model Department {
+  id        Int       @id @default(autoincrement())
+  deptName  String    @unique
+  students  Student[]
+}
+
+model PlacementCell {
+  id           Int           @id @default(autoincrement())
+  coordinators Coordinator[]
+}
+
+model Coordinator {
+  id              Int           @id @default(autoincrement())
+  name            String
+  email           String        @unique
+  password        String
+  phoneNo         String
+  placementCellId Int
+
+  placementCell   PlacementCell @relation(fields: [placementCellId], references: [id])
+}
+
+model Student {
+  id             Int              @id @default(autoincrement())
+  name           String?
+  email          String           @unique
+  password       String
+  isSpoc         Boolean          @default(false)
+  placeStatus    PlacementStatus  @default(unplaced)
+  outputYear     Int
+
+  departmentId   Int
+  department     Department       @relation(fields: [departmentId], references: [id])
+
+  placedJobRoleId Int?
+  placedJobRole   JobRole?         @relation("PlacedStudent", fields: [placedJobRoleId], references: [id])
+
+  profile        StudentProfile?
+  applications   Application[]
+  autoApplyRule  AutoApplyRule?
+}
+
+model StudentProfile {
+  id         Int     @id @default(autoincrement())
+  phoneNo    String?
+  address    String?
+  cgpa       Float?
+  marks10    Float?
+  marks12    Float?
+  resume     String?
+  photo      String?
+
+  studentId  Int     @unique
+  student    Student @relation(fields: [studentId], references: [id])
+}
+
+model Application {
+  id          Int               @id @default(autoincrement())
+  status      ApplicationStatus @default(APPLIED)
+  createdAt   DateTime          @default(now())
+
+  // Tracking flags for history
+  selectedForOA        Boolean @default(false)
+  selectedForInterview Boolean @default(false)
+  isOffered            Boolean @default(false)
+
+  studentId   Int
+  jobRoleId   Int
+
+  student     Student           @relation(fields: [studentId], references: [id])
+  jobRole     JobRole           @relation(fields: [jobRoleId], references: [id])
+
+  @@unique([studentId, jobRoleId])
+}
+
+model AutoApplyPreferredCompany {
+  autoApplyRuleId Int
+  companyId       Int
+
+  autoApplyRule   AutoApplyRule @relation(fields: [autoApplyRuleId], references: [id])
+  company         Company       @relation(fields: [companyId], references: [id])
+
+  @@id([autoApplyRuleId, companyId])
+}
+
+model AutoApplyRule {
+  id              Int                        @id @default(autoincrement())
+  minCgpa         Float
+  slab            Slab
+
+  studentId       Int                        @unique
+  student         Student                    @relation(fields: [studentId], references: [id])
+
+  preferredCompanies AutoApplyPreferredCompany[]
+}
+

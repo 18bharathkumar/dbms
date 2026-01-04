@@ -1,0 +1,6 @@
+-- CreateEnum
+CREATE TYPE "RecruitmentStage" AS ENUM ('APPLICATION_OPEN', 'OA_SHORTLIST_DONE', 'INTERVIEW_SHORTLIST_DONE', 'FINAL_RESULT_ANNOUNCED');
+
+-- AlterTable
+ALTER TABLE "JobRole" ADD COLUMN     "applicationDeadline" TIMESTAMP(3),
+ADD COLUMN     "currentStage" "RecruitmentStage" NOT NULL DEFAULT 'APPLICATION_OPEN';
