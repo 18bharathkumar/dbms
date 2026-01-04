@@ -300,7 +300,14 @@ export const applicationService = {
                         placeStatus: true,
                         department: true,
                         profile: {
-                            select: { cgpa: true }
+                            select: {
+                                cgpa: true,
+                                marks10: true,
+                                marks12: true,
+                                phoneNo: true,
+                                address: true,
+                                resume: true
+                            }
                         }
                     }
                 }
