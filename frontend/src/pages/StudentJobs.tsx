@@ -202,7 +202,7 @@ export const StudentJobs: React.FC = () => {
                                             <span className="font-bold text-emerald-600">₹{(job.package || 0).toLocaleString()}</span> /yr
                                         </span>
                                         <span className="text-slate-500">
-                                            Due: {new Date(job.applicationDeadline).toLocaleDateString()}
+                                            Due: {new Date(job.applicationDeadline).toLocaleString()}
                                         </span>
                                     </div>
                                     {hasApplied ? (
@@ -238,7 +238,7 @@ export const StudentJobs: React.FC = () => {
 
                                 <div className="col-span-2">
                                     <p className={`font-medium ${isDeadlinePassed ? 'text-rose-600' : 'text-slate-900'}`}>
-                                        {new Date(job.applicationDeadline).toLocaleDateString()}
+                                        {new Date(job.applicationDeadline).toLocaleString()}
                                     </p>
                                     <p className={`text-xs ${isDeadlinePassed ? 'text-rose-400' : 'text-slate-400'}`}>
                                         {isDeadlinePassed ? 'Deadline passed' : 'Open'}

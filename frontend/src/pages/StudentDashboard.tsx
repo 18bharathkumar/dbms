@@ -200,7 +200,7 @@ export const StudentDashboard: React.FC = () => {
 
                                                     <span className="hidden sm:inline">•</span>
 
-                                                    <span>Applied on {new Date(app.createdAt).toLocaleDateString()}</span>
+                                                    <span>Applied on {new Date(app.createdAt).toLocaleString()}</span>
                                                 </div>
                                             </div>
                                         </div>

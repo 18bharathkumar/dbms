@@ -6,12 +6,13 @@ import {
     LayoutDashboard,
     Briefcase,
     User,
-    Settings,
     Bell,
     Menu,
     X,
     TrendingUp,
-    FileText
+    FileText,
+    Building2,
+    Plus
 } from 'lucide-react';
 
 export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -28,6 +29,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
     const navItems = user?.role === 'student' ? [
         { label: 'Dashboard', icon: LayoutDashboard, path: '/student' },
         { label: 'Applications', icon: Briefcase, path: '/student/jobs' },
+        { label: 'Companies', icon: Building2, path: '/student/companies' },
         { label: 'Statistics', icon: TrendingUp, path: '/statistics' },
         { label: 'Profile', icon: User, path: '/student/profile' },
     ] : [
@@ -35,8 +37,8 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         { label: 'Companies', icon: Briefcase, path: '/coordinator/companies' },
         { label: 'Applications', icon: FileText, path: '/coordinator/jobs' },
         { label: 'Students', icon: User, path: '/coordinator/students' },
+        { label: 'Add Visit', icon: Plus, path: '/coordinator/add-visit' },
         { label: 'Statistics', icon: TrendingUp, path: '/statistics' },
-        { label: 'Settings', icon: Settings, path: '/coordinator/settings' },
     ];
 
     return (

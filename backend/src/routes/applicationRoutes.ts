@@ -186,6 +186,7 @@ router.get('/job-role/:jobRoleId', coordinatorAuth, async (req: AuthRequest, res
             parseInt(jobRoleId),
             status as string
         );
+        console.log("applications", applications)
         res.json(applications);
     } catch (error: any) {
         console.error(error);

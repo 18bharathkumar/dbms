@@ -33,7 +33,7 @@ export const AddVisitModal: React.FC<AddVisitModalProps> = ({
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.95 }}
-                        className="w-full max-w-3xl bg-white rounded-2xl shadow-xl p-6 max-h-[90vh] overflow-y-auto"
+                        className="w-full max-w-5xl bg-white rounded-2xl shadow-xl p-6 max-h-[90vh] overflow-y-auto"
                     >
                         <div className="flex justify-between items-center mb-6">
                             <h2 className="text-xl font-bold text-slate-900">Schedule New Visit</h2>
@@ -54,16 +54,18 @@ export const AddVisitModal: React.FC<AddVisitModalProps> = ({
                                     {companies.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                                 </select>
                             </div>
-                            <div>
-                                <label className="text-sm font-bold text-slate-700">Application Deadline</label>
-                                <input
-                                    type="datetime-local"
-                                    step="any"
-                                    className="w-full mt-1 px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none"
-                                    value={newVisit.deadline}
-                                    onChange={(e) => setNewVisit({ ...newVisit, deadline: e.target.value })}
-                                    required
-                                />
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="text-sm font-bold text-slate-700">Application Deadline</label>
+                                    <input
+                                        type="datetime-local"
+                                        step="any"
+                                        className="w-full mt-1 px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none"
+                                        value={newVisit.deadline}
+                                        onChange={(e) => setNewVisit({ ...newVisit, deadline: e.target.value })}
+                                        required
+                                    />
+                                </div>
                             </div>
 
                             <div className="space-y-4">

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import api from '../api';
 import { AnimatePresence } from 'framer-motion';
 
@@ -8,7 +8,6 @@ import { DashboardHeader } from '../components/coordinator/DashboardHeader';
 import { DashboardView } from '../components/coordinator/DashboardView';
 import { DepartmentView } from '../components/coordinator/DepartmentView';
 import { AllStudentsView } from '../components/coordinator/AllStudentsView';
-import { AllApplicationsView } from '../components/coordinator/AllApplicationsView';
 import { AllCompaniesView } from '../components/coordinator/AllCompaniesView';
 import { AllJobsView } from '../components/coordinator/AllJobsView';
 import { CompanyView } from '../components/coordinator/CompanyView';
@@ -20,12 +19,16 @@ import { AddVisitModal } from '../components/coordinator/AddVisitModal';
 import { AddJobRoleModal } from '../components/coordinator/AddJobRoleModal';
 import { ManageRoleModal } from '../components/coordinator/ManageRoleModal';
 import { StudentProfileModal } from '../components/coordinator/StudentProfileModal';
+import { EditVisitModal } from '../components/coordinator/EditVisitModal';
+import { EditJobRoleModal } from '../components/coordinator/EditJobRoleModal';
+import { EditCompanyModal } from '../components/coordinator/EditCompanyModal';
 
 // Types
-import type { DeptStats, Student, Company, CompanyStats, View, JobRole, Application } from '../components/coordinator/types';
+import type { DeptStats, Student, Company, CompanyStats, View, JobRole } from '../components/coordinator/types';
 
 export const CoordinatorDashboard: React.FC = () => {
     const location = useLocation();
+    const navigate = useNavigate();
     const [view, setView] = useState<View>('dashboard');
     const [deptStats, setDeptStats] = useState<DeptStats[]>([]);
     const [companies, setCompanies] = useState<Company[]>([]);
@@ -33,7 +36,6 @@ export const CoordinatorDashboard: React.FC = () => {
     const [deptStudents, setDeptStudents] = useState<Student[]>([]);
     const [selectedCompany, setSelectedCompany] = useState<CompanyStats | null>(null);
     const [allStudents, setAllStudents] = useState<Student[]>([]);
-    const [allApplications, setAllApplications] = useState<Application[]>([]);
     const [allJobs, setAllJobs] = useState<JobRole[]>([]);
     const [jobSearchTerm, setJobSearchTerm] = useState('');
     const [loading, setLoading] = useState(true);
@@ -47,18 +49,27 @@ export const CoordinatorDashboard: React.FC = () => {
             setView('all-companies');
         } else if (location.pathname === '/coordinator/jobs') {
             handleViewAllJobs();
+        } else if (location.pathname === '/coordinator/students') {
+            handleViewAllStudents();
+        } else if (location.pathname === '/coordinator/add-visit') {
+            setShowAddVisitModal(true);
+            setView('all-companies'); // Default to companies view behind the modal
         } else if (location.pathname === '/coordinator') {
             setView('dashboard');
         }
     }, [location.pathname]);
 
+    const toLocalISOString = (date: Date) => {
+        const offset = date.getTimezoneOffset();
+        const localDate = new Date(date.getTime() - (offset * 60 * 1000));
+        return localDate.toISOString().slice(0, 16);
+    };
+
     const getDefaultDeadline = () => {
         const date = new Date();
         date.setDate(date.getDate() + 7);
         date.setHours(23, 59, 0, 0);
-        const offset = date.getTimezoneOffset();
-        const localDate = new Date(date.getTime() - (offset * 60 * 1000));
-        return localDate.toISOString().slice(0, 16);
+        return toLocalISOString(date);
     };
 
     // Modal States
@@ -67,6 +78,9 @@ export const CoordinatorDashboard: React.FC = () => {
     const [showAddVisitModal, setShowAddVisitModal] = useState(false);
     const [showManageRoleModal, setShowManageRoleModal] = useState(false);
     const [showAddJobRoleModal, setShowAddJobRoleModal] = useState(false);
+    const [showEditVisitModal, setShowEditVisitModal] = useState(false);
+    const [showEditJobRoleModal, setShowEditJobRoleModal] = useState(false);
+    const [showEditCompanyModal, setShowEditCompanyModal] = useState(false);
     const [selectedVisitId, setSelectedVisitId] = useState<number | null>(null);
 
     // Form Data
@@ -82,14 +96,32 @@ export const CoordinatorDashboard: React.FC = () => {
     });
     const [newVisit, setNewVisit] = useState({
         companyId: '',
-        visitDate: '',
+        visitDate: toLocalISOString(new Date()),
         deadline: getDefaultDeadline(),
         jobRoles: [{ title: '', package: '', packageDetails: '', cgpaCutoff: 0, slab: 'Dream' }]
     });
+    const [editVisit, setEditVisit] = useState({
+        id: null,
+        visitDate: '',
+        deadline: getDefaultDeadline(),
+        jobRoles: [] as any[]
+    });
+    const [editJobRole, setEditJobRole] = useState({
+        id: null,
+        title: '',
+        package: '',
+        packageDetails: '',
+        cgpaCutoff: 0,
+        slab: 'Dream',
+        applicationDeadline: ''
+    });
+    const [editCompany, setEditCompany] = useState({ id: null, name: '' });
 
     // Job Role Management
     const [selectedJobRole, setSelectedJobRole] = useState<any>(null);
     const [roleApplications, setRoleApplications] = useState<any[]>([]);
+    const [roleApplicationsError, setRoleApplicationsError] = useState<string | null>(null);
+    const [actionError, setActionError] = useState<string | null>(null);
     const [selectedApplicationIds, setSelectedApplicationIds] = useState<number[]>([]);
     const [nextStageDate, setNextStageDate] = useState(getDefaultDeadline());
     const [activeTab, setActiveTab] = useState<'applied' | 'oa' | 'interview'>('applied');
@@ -166,19 +198,6 @@ export const CoordinatorDashboard: React.FC = () => {
         }
     };
 
-    const handleViewAllApplications = async () => {
-        setLoading(true);
-        try {
-            const res = await api.get('/applications');
-            setAllApplications(res.data);
-            setView('all-applications');
-        } catch (err) {
-            console.error('Failed to fetch all applications', err);
-        } finally {
-            setLoading(false);
-        }
-    };
-
     const handleViewAllJobs = async () => {
         setLoading(true);
         try {
@@ -216,12 +235,25 @@ export const CoordinatorDashboard: React.FC = () => {
         }
     };
 
+    const handleEditCompany = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!editCompany.id) return;
+        try {
+            await api.patch(`/companies/${editCompany.id}`, { name: editCompany.name });
+            setShowEditCompanyModal(false);
+            if (selectedCompany) handleViewCompany(selectedCompany.id);
+            fetchInitialData();
+        } catch (err) {
+            console.error('Failed to update company', err);
+        }
+    };
+
     const handleAddVisit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
             const payload = {
                 ...newVisit,
-                visitDate: new Date().toISOString(),
+                visitDate: newVisit.visitDate,
                 companyId: parseInt(newVisit.companyId),
                 jobRoles: newVisit.jobRoles.map(r => ({
                     ...r,
@@ -232,6 +264,9 @@ export const CoordinatorDashboard: React.FC = () => {
             };
             await api.post('/companies/visits', payload);
             setShowAddVisitModal(false);
+            if (location.pathname === '/coordinator/add-visit') {
+                navigate('/coordinator/companies');
+            }
             setNewVisit({
                 companyId: '',
                 visitDate: '',
@@ -247,23 +282,31 @@ export const CoordinatorDashboard: React.FC = () => {
     const handleManageRole = async (role: any) => {
         setSelectedJobRole(role);
         setShowManageRoleModal(true);
+        setActionError(null);
         fetchApplications(role.id, 'applied');
         setNextStageDate(getDefaultDeadline());
     };
 
     const fetchApplications = async (roleId: number, status: string) => {
         setLoading(true);
+        setRoleApplicationsError(null);
+        setActionError(null);
         try {
             let apiStatus = 'applied';
             if (status === 'oa') apiStatus = 'selected_for_oa';
             if (status === 'interview') apiStatus = 'selected_for_interview';
 
             const res = await api.get(`/applications/job-role/${roleId}?status=${apiStatus}`);
+            console.log("res", res.data)
             setRoleApplications(res.data);
             setActiveTab(status as any);
             setSelectedApplicationIds([]);
-        } catch (err) {
+        } catch (err: any) {
             console.error('Failed to fetch applications', err);
+            const errorMsg = err.response?.data?.error || err.message || 'Failed to fetch applications';
+            setRoleApplicationsError(errorMsg);
+            setRoleApplications([]);
+            setActiveTab(status as any);
         } finally {
             setLoading(false);
         }
@@ -271,6 +314,7 @@ export const CoordinatorDashboard: React.FC = () => {
 
     const handleUpdateShortlist = async () => {
         if (!selectedJobRole) return;
+        setActionError(null);
         try {
             if (activeTab === 'applied') {
                 await api.post(`/applications/job-role/${selectedJobRole.id}/oa-list`, {
@@ -291,8 +335,10 @@ export const CoordinatorDashboard: React.FC = () => {
                 setShowManageRoleModal(false);
                 if (selectedCompany) handleViewCompany(selectedCompany.id);
             }
-        } catch (err) {
+        } catch (err: any) {
             console.error('Failed to update shortlist', err);
+            const errorMsg = err.response?.data?.error || err.message || 'Failed to update shortlist';
+            setActionError(errorMsg);
         }
     };
 
@@ -310,6 +356,62 @@ export const CoordinatorDashboard: React.FC = () => {
             if (selectedCompany) handleViewCompany(selectedCompany.id);
         } catch (err) {
             console.error('Failed to add job role', err);
+        }
+    };
+
+    const handleEditVisit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!editVisit.id) return;
+        try {
+            await api.patch(`/companies/visits/${editVisit.id}`, {
+                visitDate: editVisit.visitDate,
+                jobRoles: editVisit.jobRoles.map((r: any) => ({
+                    ...r,
+                    package: parseFloat(r.package),
+                    cgpaCutoff: parseFloat(r.cgpaCutoff as any),
+                    applicationDeadline: r.applicationDeadline
+                }))
+            });
+            setShowEditVisitModal(false);
+            if (selectedCompany) handleViewCompany(selectedCompany.id);
+        } catch (err) {
+            console.error('Failed to update visit', err);
+        }
+    };
+
+    const handleEditJobRole = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!editJobRole.id) return;
+        try {
+            await api.patch(`/companies/job-roles/${editJobRole.id}`, {
+                ...editJobRole,
+                package: parseFloat(editJobRole.package),
+                cgpaCutoff: parseFloat(editJobRole.cgpaCutoff as any)
+            });
+            setShowEditJobRoleModal(false);
+            if (selectedCompany) handleViewCompany(selectedCompany.id);
+        } catch (err) {
+            console.error('Failed to update job role', err);
+        }
+    };
+
+    const handleDeleteVisit = async (visitId: number) => {
+        if (!window.confirm('Are you sure you want to delete this visit and all its job roles?')) return;
+        try {
+            await api.delete(`/companies/visits/${visitId}`);
+            if (selectedCompany) handleViewCompany(selectedCompany.id);
+        } catch (err) {
+            console.error('Failed to delete visit', err);
+        }
+    };
+
+    const handleDeleteJobRole = async (roleId: number) => {
+        if (!window.confirm('Are you sure you want to delete this job role?')) return;
+        try {
+            await api.delete(`/companies/job-roles/${roleId}`);
+            if (selectedCompany) handleViewCompany(selectedCompany.id);
+        } catch (err) {
+            console.error('Failed to delete job role', err);
         }
     };
 
@@ -341,8 +443,13 @@ export const CoordinatorDashboard: React.FC = () => {
                 selectedYear={selectedYear}
                 setSelectedYear={setSelectedYear}
                 handleViewAllStudents={handleViewAllStudents}
-                handleViewAllApplications={handleViewAllApplications}
                 setShowAddDeptModal={setShowAddDeptModal}
+                onEditCompany={() => {
+                    if (selectedCompany) {
+                        setEditCompany({ id: selectedCompany.id as any, name: selectedCompany.name });
+                        setShowEditCompanyModal(true);
+                    }
+                }}
             />
 
             <AnimatePresence mode="wait">
@@ -373,10 +480,6 @@ export const CoordinatorDashboard: React.FC = () => {
                     />
                 )}
 
-                {view === 'all-applications' && (
-                    <AllApplicationsView allApplications={allApplications} />
-                )}
-
                 {view === 'all-companies' && (
                     <AllCompaniesView
                         companies={companies}
@@ -404,6 +507,29 @@ export const CoordinatorDashboard: React.FC = () => {
                         setShowAddJobRoleModal={setShowAddJobRoleModal}
                         handleManageRole={handleManageRole}
                         handleViewProfile={handleViewProfile}
+                        onEditVisit={(visit) => {
+                            setEditVisit({
+                                id: visit.id,
+                                visitDate: toLocalISOString(new Date(visit.date)),
+                                deadline: visit.roles[0]?.applicationDeadline ? toLocalISOString(new Date(visit.roles[0].applicationDeadline)) : getDefaultDeadline(),
+                                jobRoles: visit.roles.map((r: any) => ({
+                                    ...r,
+                                    package: r.package.toString(),
+                                    applicationDeadline: r.applicationDeadline ? toLocalISOString(new Date(r.applicationDeadline)) : getDefaultDeadline()
+                                }))
+                            });
+                            setShowEditVisitModal(true);
+                        }}
+                        onEditJobRole={(role) => {
+                            setEditJobRole({
+                                ...role,
+                                package: role.package.toString(),
+                                applicationDeadline: toLocalISOString(new Date(role.applicationDeadline))
+                            });
+                            setShowEditJobRoleModal(true);
+                        }}
+                        onDeleteVisit={handleDeleteVisit}
+                        onDeleteJobRole={handleDeleteJobRole}
                     />
                 )}
             </AnimatePresence>
@@ -427,7 +553,12 @@ export const CoordinatorDashboard: React.FC = () => {
 
             <AddVisitModal
                 isOpen={showAddVisitModal}
-                onClose={() => setShowAddVisitModal(false)}
+                onClose={() => {
+                    setShowAddVisitModal(false);
+                    if (location.pathname === '/coordinator/add-visit') {
+                        navigate('/coordinator/companies');
+                    }
+                }}
                 onSubmit={handleAddVisit}
                 companies={companies}
                 newVisit={newVisit}
@@ -438,15 +569,18 @@ export const CoordinatorDashboard: React.FC = () => {
 
             <ManageRoleModal
                 isOpen={showManageRoleModal}
-                onClose={() => setShowManageRoleModal(false)}
+                onClose={() => {
+                    setShowManageRoleModal(false);
+                    setActionError(null);
+                }}
                 selectedJobRole={selectedJobRole}
                 roleApplications={roleApplications}
+                roleApplicationsError={roleApplicationsError}
+                actionError={actionError}
                 activeTab={activeTab}
                 fetchApplications={fetchApplications}
                 selectedApplicationIds={selectedApplicationIds}
                 setSelectedApplicationIds={setSelectedApplicationIds}
-                nextStageDate={nextStageDate}
-                setNextStageDate={setNextStageDate}
                 handleUpdateShortlist={handleUpdateShortlist}
             />
 
@@ -461,6 +595,30 @@ export const CoordinatorDashboard: React.FC = () => {
             <StudentProfileModal
                 selectedStudent={selectedStudent}
                 onClose={() => setSelectedStudent(null)}
+            />
+
+            <EditVisitModal
+                isOpen={showEditVisitModal}
+                onClose={() => setShowEditVisitModal(false)}
+                onSubmit={handleEditVisit}
+                editVisit={editVisit}
+                setEditVisit={setEditVisit}
+            />
+
+            <EditJobRoleModal
+                isOpen={showEditJobRoleModal}
+                onClose={() => setShowEditJobRoleModal(false)}
+                onSubmit={handleEditJobRole}
+                editJobRole={editJobRole}
+                setEditJobRole={setEditJobRole}
+            />
+
+            <EditCompanyModal
+                isOpen={showEditCompanyModal}
+                onClose={() => setShowEditCompanyModal(false)}
+                onSubmit={handleEditCompany}
+                editCompany={editCompany}
+                setEditCompany={setEditCompany}
             />
         </div>
     );

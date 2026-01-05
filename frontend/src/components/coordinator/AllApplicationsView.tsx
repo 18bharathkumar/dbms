@@ -46,13 +46,14 @@ export const AllApplicationsView: React.FC<AllApplicationsViewProps> = ({ allApp
                                 <td className="px-6 py-4">
                                     <Badge variant={
                                         app.status === 'OFFERED' ? 'success' :
-                                            app.status === 'REJECTED' ? 'error' : 'info'
+                                            app.status === 'REJECTED' ? 'error' :
+                                                app.status === 'APPLIED' ? 'info' : 'warning'
                                     }>
-                                        {app.status}
+                                        {app.status.replace(/_/g, ' ')}
                                     </Badge>
                                 </td>
                                 <td className="px-6 py-4 text-sm text-slate-600">
-                                    {new Date(app.createdAt).toLocaleDateString()}
+                                    {new Date(app.createdAt).toLocaleString()}
                                 </td>
                             </tr>
                         ))}

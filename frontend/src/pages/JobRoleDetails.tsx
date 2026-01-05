@@ -224,7 +224,7 @@ export const JobRoleDetails: React.FC = () => {
                     <Calendar size={24} className="text-amber-500 mx-auto mb-2" />
                     <p className="text-sm text-slate-500">Deadline</p>
                     <p className="text-lg font-bold text-slate-900">
-                        {new Date(jobRole.applicationDeadline).toLocaleDateString()}
+                        {new Date(jobRole.applicationDeadline).toLocaleString()}
                     </p>
                     <p className={`text-xs ${isDeadlinePassed ? 'text-rose-500' : 'text-emerald-500'}`}>
                         {isDeadlinePassed ? 'Closed' : 'Open'}
@@ -274,7 +274,7 @@ export const JobRoleDetails: React.FC = () => {
                                 <div className="flex-1 pb-2">
                                     <p className="font-semibold text-slate-900">Online Assessment</p>
                                     <p className="text-sm text-slate-500">
-                                        {new Date(jobRole.oaDate).toLocaleDateString()}
+                                        {new Date(jobRole.oaDate).toLocaleString()}
                                     </p>
                                 </div>
                             </div>
@@ -289,7 +289,7 @@ export const JobRoleDetails: React.FC = () => {
                                 <div className="flex-1 pb-2">
                                     <p className="font-semibold text-slate-900">Interview Round</p>
                                     <p className="text-sm text-slate-500">
-                                        {new Date(jobRole.interviewDate).toLocaleDateString()}
+                                        {new Date(jobRole.interviewDate).toLocaleString()}
                                     </p>
                                 </div>
                             </div>
@@ -316,8 +316,7 @@ export const JobRoleDetails: React.FC = () => {
                         <div>
                             <h3 className="font-bold text-slate-900 text-lg">Your Application</h3>
                             <p className="text-slate-500 text-sm mt-1">
-                                Applied on {new Date(application.createdAt).toLocaleDateString()} at{' '}
-                                {new Date(application.createdAt).toLocaleTimeString()}
+                                Applied on {new Date(application.createdAt).toLocaleString()}
                             </p>
                         </div>
                         <Badge

@@ -5,6 +5,7 @@ import { RegisterPage } from './pages/RegisterPage';
 import { StudentDashboard } from './pages/StudentDashboard';
 import { StudentProfile } from './pages/StudentProfile';
 import { StudentJobs } from './pages/StudentJobs';
+import { StudentCompanies } from './pages/StudentCompanies';
 import { JobRoleDetails } from './pages/JobRoleDetails';
 import { Layout } from './components/Layout';
 import './index.css';
@@ -69,6 +70,15 @@ function AppRoutes() {
       />
 
       <Route
+        path="/student/companies"
+        element={
+          <PrivateRoute role="student">
+            <StudentCompanies />
+          </PrivateRoute>
+        }
+      />
+
+      <Route
         path="/coordinator"
         element={
           <PrivateRoute role="coordinator">
@@ -88,6 +98,24 @@ function AppRoutes() {
 
       <Route
         path="/coordinator/jobs"
+        element={
+          <PrivateRoute role="coordinator">
+            <CoordinatorDashboard />
+          </PrivateRoute>
+        }
+      />
+
+      <Route
+        path="/coordinator/students"
+        element={
+          <PrivateRoute role="coordinator">
+            <CoordinatorDashboard />
+          </PrivateRoute>
+        }
+      />
+
+      <Route
+        path="/coordinator/add-visit"
         element={
           <PrivateRoute role="coordinator">
             <CoordinatorDashboard />

@@ -346,10 +346,6 @@ export const StatisticsPage: React.FC = () => {
                                     {yearStat.visits.map((visit) => (
                                         <Card key={visit.id} className="p-6">
                                             <div className="flex justify-between items-start mb-6">
-                                                <div>
-                                                    <p className="text-sm font-medium text-slate-500">Visit Date</p>
-                                                    <p className="text-lg font-bold text-slate-900">{new Date(visit.date).toLocaleDateString()}</p>
-                                                </div>
                                                 <div className="bg-indigo-50 text-indigo-700 px-3 py-1 rounded-full text-sm font-bold">
                                                     {visit.totalHired} Hired
                                                 </div>

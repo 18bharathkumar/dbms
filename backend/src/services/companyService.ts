@@ -11,8 +11,11 @@ export const companyService = {
     async findAllCompanies() {
         return await prisma.company.findMany({
             include: {
-                jobRoles: true,
-                companyVisits: true,
+                companyVisits: {
+                    include: {
+                        academicYear: true
+                    }
+                }
             },
         });
     },
@@ -115,21 +118,111 @@ export const companyService = {
         });
     },
 
-    async updateJobRole(id: number, data: Partial<{
-        title: string;
-        package: number;
-        packageDetails: string;
-        cgpaCutoff: number;
-        slab: Slab;
-        applicationDeadline: string | Date;
-    }>) {
-        const updateData: any = { ...data };
-        if (data.applicationDeadline) {
-            updateData.applicationDeadline = new Date(data.applicationDeadline);
-        }
+    async updateJobRole(id: number, data: any) {
+        const updateData: any = {};
+        const allowedFields = ['title', 'package', 'packageDetails', 'cgpaCutoff', 'slab', 'applicationDeadline'];
+
+        allowedFields.forEach(field => {
+            if (data[field] !== undefined) {
+                if (field === 'applicationDeadline') {
+                    updateData[field] = new Date(data[field]);
+                } else {
+                    updateData[field] = data[field];
+                }
+            }
+        });
+
         return await prisma.jobRole.update({
             where: { id },
             data: updateData,
+        });
+    },
+
+    async updateCompany(id: number, data: { name: string }) {
+        return await prisma.company.update({
+            where: { id },
+            data: { name: data.name },
+        });
+    },
+
+    async deleteCompany(id: number) {
+        return await prisma.company.delete({
+            where: { id },
+        });
+    },
+
+    async updateCompanyVisit(id: number, data: {
+        visitDate?: string | Date;
+        jobRoles?: Array<{
+            id?: number;
+            title: string;
+            package: number;
+            packageDetails: string;
+            cgpaCutoff: number;
+            slab: Slab;
+            applicationDeadline: string | Date;
+        }>;
+    }) {
+        const { visitDate, jobRoles } = data;
+
+        return await prisma.$transaction(async (tx) => {
+            if (visitDate) {
+                await tx.companyVisit.update({
+                    where: { id },
+                    data: { visitDate: new Date(visitDate) },
+                });
+            }
+
+            if (jobRoles) {
+                const visit = await tx.companyVisit.findUnique({
+                    where: { id },
+                    select: { companyId: true },
+                });
+                if (!visit) throw new Error('Visit not found');
+
+                for (const role of jobRoles) {
+                    const roleData = {
+                        title: role.title,
+                        package: role.package,
+                        packageDetails: role.packageDetails,
+                        cgpaCutoff: role.cgpaCutoff,
+                        slab: role.slab,
+                        applicationDeadline: new Date(role.applicationDeadline),
+                    };
+
+                    if (role.id) {
+                        await tx.jobRole.update({
+                            where: { id: role.id },
+                            data: roleData,
+                        });
+                    } else {
+                        await tx.jobRole.create({
+                            data: {
+                                ...roleData,
+                                companyVisit: { connect: { id } },
+                                company: { connect: { id: visit.companyId } },
+                            },
+                        });
+                    }
+                }
+            }
+
+            return await tx.companyVisit.findUnique({
+                where: { id },
+                include: { jobRoles: true },
+            });
+        });
+    },
+
+    async deleteCompanyVisit(id: number) {
+        return await prisma.companyVisit.delete({
+            where: { id },
+        });
+    },
+
+    async deleteJobRole(id: number) {
+        return await prisma.jobRole.delete({
+            where: { id },
         });
     },
 
@@ -207,6 +300,10 @@ export const companyService = {
                     id: role.id,
                     title: role.title,
                     package: role.package,
+                    packageDetails: role.packageDetails,
+                    cgpaCutoff: role.cgpaCutoff,
+                    slab: role.slab,
+                    applicationDeadline: role.applicationDeadline,
                     hiredCount: role.placedStudents.length,
                     hiredStudents: role.placedStudents
                 }))

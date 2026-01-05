@@ -263,8 +263,7 @@ export const applicationService = {
         // Logic based on requested status and current stage
         switch (requestedStatus) {
             case 'applied':
-                // Always accessible
-                filters.status = ApplicationStatus.APPLIED;
+                // Always accessible, returns all applications for this role
                 break;
             case 'selected_for_oa':
                 if (jobRole.currentStage === RecruitmentStage.APPLICATION_OPEN) {

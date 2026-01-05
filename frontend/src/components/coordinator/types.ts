@@ -32,6 +32,13 @@ export interface Student {
 export interface Company {
     id: number;
     name: string;
+    companyVisits?: {
+        id: number;
+        visitDate: string;
+        academicYear: {
+            year: number;
+        };
+    }[];
 }
 
 export interface CompanyStats {

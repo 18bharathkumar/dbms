@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeft, Calendar, Users, FileText } from 'lucide-react';
+import { ArrowLeft, Calendar, Users, Edit2 } from 'lucide-react';
 import { Button } from '../UI';
 
 interface DashboardHeaderProps {
@@ -10,8 +10,8 @@ interface DashboardHeaderProps {
     selectedYear: number;
     setSelectedYear: (year: number) => void;
     handleViewAllStudents: () => void;
-    handleViewAllApplications: () => void;
     setShowAddDeptModal: (show: boolean) => void;
+    onEditCompany?: () => void;
 }
 
 export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
@@ -22,8 +22,8 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
     selectedYear,
     setSelectedYear,
     handleViewAllStudents,
-    handleViewAllApplications,
-    setShowAddDeptModal
+    setShowAddDeptModal,
+    onEditCompany
 }) => {
     return (
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -37,14 +37,28 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                         Back to Dashboard
                     </button>
                 )}
-                <h1 className="text-3xl font-bold text-slate-900">
-                    {view === 'dashboard' && 'Coordinator Overview'}
-                    {view === 'department' && `${selectedDeptName} Department`}
-                    {view === 'company' && `${selectedCompanyName} Statistics`}
-                    {view === 'all-students' && 'All Registered Students'}
-                    {view === 'all-companies' && 'Manage Companies'}
-                    {view === 'all-jobs' && 'Manage Applications'}
-                </h1>
+                {view === 'company' && selectedCompanyName && (
+                    <div className="flex items-center gap-2">
+                        <h1 className="text-3xl font-bold text-slate-900">{selectedCompanyName}</h1>
+                        <button
+                            onClick={onEditCompany}
+                            className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                            title="Edit Company Name"
+                        >
+                            <Edit2 size={18} />
+                        </button>
+                    </div>
+                )}
+                {view !== 'company' && (
+                    <h1 className="text-3xl font-bold text-slate-900">
+                        {view === 'dashboard' && 'Placement Dashboard'}
+                        {view === 'department' && `${selectedDeptName} Department`}
+                        {view === 'all-students' && 'All Students'}
+                        {view === 'all-applications' && 'All Applications'}
+                        {view === 'all-companies' && 'Manage Companies'}
+                        {view === 'all-jobs' && 'Manage Job Roles'}
+                    </h1>
+                )}
                 <p className="text-slate-500 mt-1">
                     {view === 'dashboard' && 'Manage placements, companies, and student applications.'}
                     {view === 'department' && 'Viewing students and placement details for this department.'}
@@ -72,10 +86,6 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                     <Button variant="outline" className="gap-2" onClick={handleViewAllStudents}>
                         <Users size={18} />
                         All Students
-                    </Button>
-                    <Button variant="outline" className="gap-2" onClick={handleViewAllApplications}>
-                        <FileText size={18} />
-                        All Applications
                     </Button>
                     <Button variant="outline" className="gap-2" onClick={() => setShowAddDeptModal(true)}>
                         <Users size={18} />

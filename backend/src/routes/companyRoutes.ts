@@ -59,6 +59,28 @@ router.get('/', async (req, res) => {
     }
 });
 
+router.patch('/:id', coordinatorAuth, async (req: AuthRequest, res: Response) => {
+    try {
+        const id = parseInt(req.params.id as string);
+        const company = await companyService.updateCompany(id, req.body);
+        res.json(company);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Failed to update company' });
+    }
+});
+
+router.delete('/:id', coordinatorAuth, async (req: AuthRequest, res: Response) => {
+    try {
+        const id = parseInt(req.params.id as string);
+        await companyService.deleteCompany(id);
+        res.status(204).send();
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Failed to delete company' });
+    }
+});
+
 /**
  * @swagger
  * /companies/visits:
@@ -137,6 +159,59 @@ router.get('/visits', async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Failed to fetch visits' });
+    }
+});
+
+/**
+ * @swagger
+ * /companies/visits/{id}:
+ *   patch:
+ *     summary: Update a company visit (Coordinator only)
+ *     tags: [Companies]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               visitDate:
+ *                 type: string
+ *                 format: date-time
+ *     responses:
+ *       200:
+ *         description: Company visit updated
+ *       403:
+ *         description: Forbidden
+ */
+router.patch('/visits/:id', coordinatorAuth, async (req: AuthRequest, res: Response) => {
+    try {
+        const id = parseInt(req.params.id as string);
+        console.log("req.body", req.body);
+        const visit = await companyService.updateCompanyVisit(id, req.body);
+        res.json(visit);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Failed to update visit' });
+    }
+});
+
+router.delete('/visits/:id', coordinatorAuth, async (req: AuthRequest, res: Response) => {
+    try {
+        const id = parseInt(req.params.id as string);
+        await companyService.deleteCompanyVisit(id);
+        res.status(204).send();
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Failed to delete visit' });
     }
 });
 
@@ -245,6 +320,17 @@ router.patch('/job-roles/:id', coordinatorAuth, async (req: AuthRequest, res: Re
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Failed to update job role' });
+    }
+});
+
+router.delete('/job-roles/:id', coordinatorAuth, async (req: AuthRequest, res: Response) => {
+    try {
+        const id = parseInt(req.params.id as string);
+        await companyService.deleteJobRole(id);
+        res.status(204).send();
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Failed to delete job role' });
     }
 });
 

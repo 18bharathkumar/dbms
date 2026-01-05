@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, Plus, Award } from 'lucide-react';
+import { Calendar, Plus, Award, Edit2, Trash2 } from 'lucide-react';
 import { Card, Button } from '../UI';
 import type { CompanyStats } from './types';
 
@@ -10,6 +10,10 @@ interface CompanyViewProps {
     setShowAddJobRoleModal: (show: boolean) => void;
     handleManageRole: (role: any) => void;
     handleViewProfile: (studentId: number) => void;
+    onEditVisit: (visit: any) => void;
+    onEditJobRole: (role: any) => void;
+    onDeleteVisit: (visitId: number) => void;
+    onDeleteJobRole: (roleId: number) => void;
 }
 
 export const CompanyView: React.FC<CompanyViewProps> = ({
@@ -17,7 +21,11 @@ export const CompanyView: React.FC<CompanyViewProps> = ({
     setSelectedVisitId,
     setShowAddJobRoleModal,
     handleManageRole,
-    handleViewProfile
+    handleViewProfile,
+    onEditVisit,
+    onEditJobRole,
+    onDeleteVisit,
+    onDeleteJobRole
 }) => {
     return (
         <motion.div
@@ -37,11 +45,13 @@ export const CompanyView: React.FC<CompanyViewProps> = ({
                         {yearStat.visits.map((visit) => (
                             <Card key={visit.id} className="p-6">
                                 <div className="flex justify-between items-start mb-6">
-                                    <div>
-                                        <p className="text-sm font-medium text-slate-500">Visit Date</p>
-                                        <p className="text-lg font-bold text-slate-900">{new Date(visit.date).toLocaleDateString()}</p>
-                                    </div>
                                     <div className="flex items-center gap-3">
+                                        <Button size="sm" variant="outline" onClick={() => onEditVisit(visit)}>
+                                            <Edit2 size={14} className="mr-1" /> Edit Visit
+                                        </Button>
+                                        <Button size="sm" variant="outline" className="text-rose-600 hover:bg-rose-50 border-rose-100" onClick={() => onDeleteVisit(visit.id)}>
+                                            <Trash2 size={14} className="mr-1" /> Delete Visit
+                                        </Button>
                                         <Button size="sm" variant="outline" onClick={() => {
                                             setSelectedVisitId(visit.id);
                                             setShowAddJobRoleModal(true);
@@ -67,9 +77,17 @@ export const CompanyView: React.FC<CompanyViewProps> = ({
                                                     <Award size={14} className="text-amber-500" />
                                                     <span className="text-sm text-slate-600">{role.hiredCount} Students Hired</span>
                                                 </div>
-                                                <Button size="sm" variant="outline" onClick={() => handleManageRole(role)}>
-                                                    Manage
-                                                </Button>
+                                                <div className="flex gap-2">
+                                                    <Button size="sm" variant="outline" onClick={() => onEditJobRole(role)}>
+                                                        <Edit2 size={14} />
+                                                    </Button>
+                                                    <Button size="sm" variant="outline" className="text-rose-600 hover:bg-rose-50 border-rose-100" onClick={() => onDeleteJobRole(role.id)}>
+                                                        <Trash2 size={14} />
+                                                    </Button>
+                                                    <Button size="sm" variant="outline" onClick={() => handleManageRole(role)}>
+                                                        Manage
+                                                    </Button>
+                                                </div>
                                             </div>
                                             {role.hiredStudents.length > 0 && (
                                                 <div className="mt-3 flex flex-wrap gap-1">
